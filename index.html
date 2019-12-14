@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>播放器</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div class="wrap">
+    <video src="https://blz-videos.nosdn.127.net/1/OverWatch/AnimatedShots/Overwatch_AnimatedShot_Soldier76_Hero.mp4"></video>
+    <div class="controls">
+        <div class="btns">
+            <span class="start"></span>
+            <span class="stop"></span>
+        </div>
+        <div class="progress">
+            <div class="container">
+                <div class="inner"></div>
+            </div>
+            <div class="yellow"></div>
+        </div>
+        <div class="time-sound">
+            <div class="time">
+                <span class="now">00:00:00</span>/<span class="all">00:00:00</span>
+            </div>
+            <div class="sound">
+                <div class="muted">
+                    <span></span>
+                </div>
+                <div class="sound-progress">
+                    <div class="sound-container">
+                        <div class="sound-inner"></div>
+                    </div>
+                    <div class="sound-yellow"></div>
+                </div>
+            </div>
+            <div class="full-screen">
+                <span></span>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="js/drag.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        var video = document.querySelector('video');
+        var controls = document.querySelector('.controls');
+        var start = document.querySelector('.start');
+        var stop = document.querySelector('.stop');
+        var progress = document.querySelector('.progress');
+        var container = document.querySelector('.container');
+        var inner = document.querySelector('.inner');
+        var yellow = document.querySelector('.yellow');
+        var soundProgress = document.querySelector('.sound-progress');
+        var soundContainer = document.querySelector('.sound-container');
+        var soundInner = document.querySelector('.sound-inner');
+        var soundYellow = document.querySelector('.sound-yellow');
+        var muted = document.querySelector('.muted');
+        var mutedSpan = document.querySelector('.muted>span');
+        var fullScreen = document.querySelector('.full-screen');
+        var fullScreenSpan = document.querySelector('.full-screen>span');
+        var flag = 1;
+        video.width = document.documentElement.clientWidth;
+        video.height = document.documentElement.clientHeight - controls.clientHeight;
+        window.onresize = function () {
+            if (document.documentElement.clientWidth >= 600) {
+                video.width = document.documentElement.clientWidth;
+                video.height = document.documentElement.clientHeight - controls.clientHeight;
+            }
+        };
+        //进度音量拖拽
+        var innerCall = {
+            move: function () {
+                this.style.left = yellow.style.width = this.offsetLeft + 'px';
+            }
+        };
+        var soundInnerCall = {
+            move: function () {
+                this.style.left = soundYellow.style.width = this.offsetLeft + 'px';
+                flag = (this.offsetLeft) / (soundContainer.clientWidth - soundInner.offsetWidth);
+                video.volume = flag;
+                if (video.volume == 0) {
+                    video.muted = true;
+                    mutedSpan.classList.add('active');
+                } else {
+                    video.muted = false;
+                    mutedSpan.classList.remove('active');
+                }
+
+            }
+        };
+        $.drag(inner, innerCall);
+        $.drag(soundInner, soundInnerCall);
+        //拖拽结束
+        player();
+
+        function player() {
+            var timer = 0;
+            //点击播放暂停
+            start.onclick = function () {
+                if (video.paused) {
+                    video.play();
+                    start.classList.add('active');
+                    timer = setInterval(move, 1000);
+                } else {
+                    video.pause();
+                    start.classList.remove('active');
+                    clearInterval(timer);
+                }
+
+            };
+            //点击停止
+            stop.onclick = function () {
+                video.pause();
+                clearInterval(timer);
+                start.classList.remove('active');
+                video.currentTime = 0;
+                inner.style.left = yellow.style.width = '0px';
+            };
+            //点击进度条播放
+            progress.onclick = function (e) {
+                e = e || window.event;
+                video.play();
+                start.classList.add('active');
+                timer = setInterval(move, 1000);
+                video.currentTime = video.duration * (e.clientX - progress.offsetLeft) / (progress.clientWidth - inner.clientWidth);
+
+            };
+            soundInner.style.left = soundYellow.style.width = soundContainer.offsetWidth - soundInner.offsetWidth + 'px';
+            //静音
+            muted.onclick = function () {
+                if (video.muted) {
+                    video.muted = false;
+                    mutedSpan.classList.remove('active');
+
+                    flag = flag === 1 ? 1 : flag;
+                    video.volume = flag;
+                    soundInner.style.left = soundYellow.style.width = (soundContainer.offsetWidth - soundInner.offsetWidth) * flag + 'px';
+                } else {
+                    video.muted = true;
+                    mutedSpan.classList.add('active');
+                    video.volume = 0;
+                    soundInner.style.left = soundYellow.style.width = '0px';
+                }
+
+            };
+            //全屏
+            var isFullScreen=false;
+            fullScreen.onclick=function(){
+              if(isFullScreen){
+                  isFullScreen=!isFullScreen;
+                  fullScreenSpan.classList.remove('active');
+                  if(document.exitFullscreen){
+                      document.exitFullscreen();
+                  }else if(document.mozCancelFullScreen){
+                      document.mozCancelFullScreen();
+                  }else if(document.msExtiFullScreen){
+                      document.msExtiFullScreen();
+                  }
+              }else{
+                  isFullScreen=!isFullScreen;
+                  fullScreenSpan.classList.add('active');
+                  if(document.documentElement.requestFullscreen){
+                      document.documentElement.requestFullscreen();
+                  }else if(document.mozRequestFullScreen){
+                      document.mozRequestFullScreen();
+                  }else if(document.webkitRequestFullScreen){
+                      document.webkitRequestFullScreen();
+                  }else if(document.msRequestFullScreen){
+                      document.msRequestFullScreen();
+                  }
+              }
+            };
+
+            function move() {
+                inner.style.left = yellow.style.width = ((video.currentTime / video.duration) * (container.clientWidth - inner.clientWidth)) + 'px';
+            }
+
+
+        }
+
+
+    }
+</script>
+</body>
+</html>
